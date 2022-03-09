@@ -1,7 +1,21 @@
 const chatForm = document.getElementById("chat-form");
 const chatContainer = document.querySelector(".chat-messages");
 
+//getting username and roomname fron url
+
+const { username, room } = Qs.parse(location.search, {
+  ignoreQueryPrefix: true,
+});
+
 const socket = io();
+//join room
+socket.emit("joinRoom", { username, room });
+
+//get room users
+socket.on("roomUsers", ({ room, users }) => {
+  console.log(room, users);
+  outputRoomInfo(room, users);
+});
 
 // message from server
 socket.on("message", (msgObj) => {
@@ -36,4 +50,19 @@ function outputMessage(msg) {
    ${msg.text}
   </p>`;
   document.querySelector(".chat-messages").appendChild(div);
+}
+
+function outputRoomInfo(room, users) {
+  const roomName = document.getElementById("room-name");
+  const userContainer = document.getElementById("users");
+  roomName.innerText = room;
+  while (userContainer.firstChild) {
+    //removing previous state of users
+    userContainer.removeChild(userContainer.firstChild);
+  }
+  users.map((user) => {
+    const li = document.createElement("li");
+    li.innerText = user.username;
+    userContainer.appendChild(li);
+  });
 }
